@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI HairStudio - トレンド髪型シミュレーター</title>
+  <title>AI HairStudio - チャット指示で髪型を変えるバーチャルサロン</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -16,9 +16,6 @@
       background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
       background-color: #0b0f19;
     }
-    input[type=range] {
-      accent-color: #6366f1;
-    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -28,7 +25,7 @@
     <div class="max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <i class="fa-solid fa-scissors text-white text-lg"></i>
+          <i class="fa-solid fa-comments text-white text-lg"></i>
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -36,20 +33,16 @@
               AI HairStudio
             </h1>
             <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              顔固定・実写合成
+              チャット指示対応
             </span>
           </div>
-          <p class="text-xs text-slate-400">センターパート / ウルフ / コンマバングなど人気トレンドを完全再現</p>
+          <p class="text-xs text-slate-400">チャットで「センターパートにして」と頼むだけで髪型を生成</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button id="btnOpenApiKeyModal" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
           <i class="fa-solid fa-key text-amber-400"></i> Google AI設定 (無料)
         </button>
-        <div id="engineBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-          リアルヘアエンジン稼働中
-        </div>
       </div>
     </div>
   </header>
@@ -75,8 +68,8 @@
                 <i class="fa-solid fa-wand-magic-sparkles text-lg text-indigo-400 animate-pulse"></i>
               </div>
             </div>
-            <h3 class="text-sm font-bold text-white mb-1">髪型をシームレス合成中...</h3>
-            <p class="text-xs text-slate-400">目・鼻・肌色はそのまま保ち、生え際を馴染ませています</p>
+            <h3 class="text-sm font-bold text-white mb-1" id="loadingTitle">AIがオーダー通りに髪型を生成中...</h3>
+            <p class="text-xs text-slate-400" id="loadingSubtitle">顔の目・鼻・口を保護し、髪の毛だけを描き直しています</p>
           </div>
 
           <!-- 未アップロード時案内 -->
@@ -110,9 +103,6 @@
             <button id="btnToggleCompare" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition">
               <i class="fa-solid fa-eye"></i> Before確認 (長押し)
             </button>
-            <button id="btnResetAdjust" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-400 hover:text-slate-200 transition">
-              <i class="fa-solid fa-rotate-left"></i> 位置リセット
-            </button>
           </div>
           <div class="flex items-center gap-2">
             <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition">
@@ -120,100 +110,75 @@
               <input type="file" id="imageInputAlt" accept="image/*" class="hidden">
             </label>
             <button id="btnDownload" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition">
-              <i class="fa-solid fa-download"></i> 高画質保存
+              <i class="fa-solid fa-download"></i> 保存
             </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 位置・フィット微調整 -->
-      <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-2">
-        <div class="flex items-center justify-between text-xs font-bold text-slate-300">
-          <span class="flex items-center gap-1.5">
-            <i class="fa-solid fa-sliders text-indigo-400"></i>
-            髪型の位置・大きさ微調整
-          </span>
-          <span class="text-[11px] text-slate-400 font-normal">※キャンバス直接ドラッグでも移動可能</span>
-        </div>
-        <div class="grid grid-cols-3 gap-3 text-xs pt-1">
-          <div>
-            <div class="flex justify-between text-slate-400 text-[11px] mb-1">
-              <span>大きさ</span>
-              <span id="valScale">100%</span>
-            </div>
-            <input type="range" id="rangeScale" min="80" max="130" value="100" class="w-full">
-          </div>
-          <div>
-            <div class="flex justify-between text-slate-400 text-[11px] mb-1">
-              <span>生え際 (上下)</span>
-              <span id="valOffsetY">0px</span>
-            </div>
-            <input type="range" id="rangeOffsetY" min="-80" max="80" value="0" class="w-full">
-          </div>
-          <div>
-            <div class="flex justify-between text-slate-400 text-[11px] mb-1">
-              <span>左右位置</span>
-              <span id="valOffsetX">0px</span>
-            </div>
-            <input type="range" id="rangeOffsetX" min="-60" max="60" value="0" class="w-full">
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 右側: 人気ヘアスタイル & カラー選択 (5カラム) -->
+    <!-- 右側: チャットで髪型オーダー & プリセット (5カラム) -->
     <div class="lg:col-span-5 flex flex-col gap-4">
+
+      <!-- 💬 チャットで髪型オーダーBOX -->
+      <div class="bg-gradient-to-b from-indigo-950/50 to-slate-900 p-4 rounded-2xl border border-indigo-500/40 shadow-xl flex flex-col gap-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
+          <h2 class="text-sm font-black text-white">チャットでAIにオーダーする</h2>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          美容室で頼むように、希望の髪型やカラーを日本語で自由に入力してください：
+        </p>
+
+        <!-- 入力フォーム -->
+        <div class="relative">
+          <textarea id="chatPromptInput" rows="3" placeholder="例: 前髪を分けた大人っぽいセンターパートにして、黒髪で清潔感を出して" class="w-full p-3 pr-12 rounded-xl bg-slate-950 border border-indigo-500/40 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none"></textarea>
+          <button id="btnSubmitChat" class="absolute bottom-2.5 right-2.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-indigo-600/30 transition">
+            <span>送信</span>
+            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- よく使われるオーダー例（ワンタップ入力） -->
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <span class="text-[10px] text-slate-400 self-center mr-1">タップで入力:</span>
+          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="前髪をセンター分けにした大人っぽいセンターパート、黒髪">
+            センターパート
+          </button>
+          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="韓国風のコンマバング、前髪を内側にカールさせたスタイル">
+            コンマバング
+          </button>
+          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="襟足レイヤーの立体的なウルフカット、ダークブラウン">
+            ウルフカット
+          </button>
+          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="波打ちウェーブのスパイラルパーマ、ウェット質感">
+            スパイラルパーマ
+          </button>
+          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-900/50 transition" data-text="韓国風くびれレイヤーカット、透明感あるグレージュ">
+            くびれレイヤー
+          </button>
+          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-900/50 transition" data-text="顎ラインの綺麗な切りっぱなしボブ、ストレート">
+            切りっぱなしボブ
+          </button>
+        </div>
+      </div>
 
       <!-- 性別タブ -->
       <div class="bg-slate-900 p-1.5 rounded-2xl border border-slate-800 flex">
-        <button id="tabMen" class="flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/20">
-          <i class="fa-solid fa-mars"></i> Men's (メンズ人気)
+        <button id="tabMen" class="flex-1 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition bg-indigo-600 text-white shadow">
+          <i class="fa-solid fa-mars"></i> メンズ人気カタログ
         </button>
-        <button id="tabWomen" class="flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition text-slate-400 hover:text-white">
-          <i class="fa-solid fa-venus"></i> Women's (レディース人気)
+        <button id="tabWomen" class="flex-1 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition text-slate-400 hover:text-white">
+          <i class="fa-solid fa-venus"></i> レディース人気カタログ
         </button>
       </div>
 
-      <!-- トレンドヘアカタログ -->
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-bold flex items-center gap-2 text-slate-200">
-            <i class="fa-solid fa-fire text-amber-400"></i>
-            トレンド髪型カタログ
-          </h2>
-          <span id="currentStyleLabel" class="text-xs text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
-            センターパート
-          </span>
-        </div>
-        
-        <!-- スタイルカード一覧 -->
-        <div id="hairStyleGrid" class="grid grid-cols-2 gap-2.5 max-h-[290px] overflow-y-auto pr-1">
+      <!-- カタロググリッド -->
+      <div class="bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
+        <div id="hairStyleGrid" class="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto pr-1">
           <!-- JSで動的生成 -->
         </div>
       </div>
-
-      <!-- ヘアカラー -->
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-bold flex items-center gap-2 text-slate-200">
-            <i class="fa-solid fa-palette text-pink-400"></i>
-            髪色 (ヘアカラー)
-          </h2>
-          <span id="currentColorLabel" class="text-xs text-pink-400 font-medium bg-pink-500/10 px-2 py-0.5 rounded">
-            ナチュラルブラック
-          </span>
-        </div>
-        
-        <div id="hairColorGrid" class="grid grid-cols-4 gap-2">
-          <!-- JSで動的生成 -->
-        </div>
-      </div>
-
-      <!-- 合成ボタン -->
-      <button id="btnGenerateAI" class="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-black text-base flex items-center justify-center gap-2.5 shadow-xl shadow-indigo-600/30 transition transform hover:scale-[1.02] active:scale-[0.98]">
-        <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
-        ✨ 選択した髪型にチェンジする
-      </button>
 
     </div>
 
@@ -228,26 +193,23 @@
 
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <i class="fa-solid fa-key"></i>
         </div>
         <div>
-          <h3 class="font-bold text-base text-white">Google AI Studio (完全無料)</h3>
-          <p class="text-xs text-slate-400">Googleの最先端画像AI (Imagen 3) で生成</p>
+          <h3 class="font-bold text-base text-white">Google AI Studio 設定 (完全無料)</h3>
+          <p class="text-xs text-slate-400">Googleの最先端AIで超高画質生成</p>
         </div>
       </div>
 
       <p class="text-xs text-slate-300 mb-4 leading-relaxed">
-        Googleアカウントをお持ちなら、<a href="https://aistudio.google.com/apikey" target="_blank" class="text-indigo-400 underline font-semibold">Google AI Studio</a> で無料のAPIキーを1分で取得できます（クレジットカード不要）。
+        <a href="https://aistudio.google.com/apikey" target="_blank" class="text-indigo-400 underline font-semibold">Google AI Studio</a> で無料のAPIキーを1分で発行できます（クレジットカード不要）。
       </p>
 
       <div class="space-y-3 mb-5">
         <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">API Key (または未入力でプリセットを使用)</label>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">API Key</label>
           <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500">
         </div>
-        <p class="text-[11px] text-slate-400">
-          ※ キーはご自身のブラウザのローカルストレージにのみ保存され、外部には送信されません。
-        </p>
       </div>
 
       <div class="flex items-center justify-end gap-2">
