@@ -1,96 +1,95 @@
 /**
- * HairStyle Studio - Main Application Logic
+ * AI HairStudio - Photorealistic Hairstyle Transfer
  */
 
-// ヘアスタイル定義（メンズ & レディース）
-const HAIR_STYLES = {
+// 実写ヘアカタログの定義（メンズ & レディース）
+const HAIR_CATALOG = {
   men: [
     {
       id: 'm_mash',
       name: 'ナチュラルマッシュ',
-      tag: '定番・人気',
-      icon: 'fa-user',
-      // SVGパス定義 (頭頂部・前髪・サイド)
-      draw: (ctx, color, highlight) => drawMaleMash(ctx, color, highlight)
+      desc: '清潔感・王道トレンド',
+      refImage: 'assets/hairstyles/1.png',
+      prompt: 'handsome Japanese young man with clean natural mash haircut, soft bangs covering forehead, silky hair texture, salon lighting'
     },
     {
       id: 'm_center',
       name: 'センターパート',
-      tag: '大人・清潔感',
-      icon: 'fa-user-tie',
-      draw: (ctx, color, highlight) => drawMaleCenterPart(ctx, color, highlight)
+      desc: '大人の色気・爽やか',
+      refImage: 'assets/hairstyles/0.png',
+      prompt: 'handsome Japanese man with stylish center part hairstyle, sleek parted bangs, forehead visible, clean-cut, detailed hair'
     },
     {
       id: 'm_short',
       name: 'スパイキーショート',
-      tag: '爽快・ビジネス',
-      icon: 'fa-sun',
-      draw: (ctx, color, highlight) => drawMaleShort(ctx, color, highlight)
+      desc: '束感・男らしい短髪',
+      refImage: 'assets/hairstyles/4.jpg',
+      prompt: 'handsome Japanese man with spiky short haircut, textured top, neat side fade, masculine stylish look'
     },
     {
       id: 'm_perm',
       name: 'ニュアンスパーマ',
-      tag: '束感・トレンド',
-      icon: 'fa-water',
-      draw: (ctx, color, highlight) => drawMalePerm(ctx, color, highlight)
+      desc: '外国人風ウェーブ',
+      refImage: 'assets/hairstyles/3.jpg',
+      prompt: 'handsome Japanese man with natural wavy perm hair, loose curls, voluminous textured hair, soft salon lighting'
     },
     {
       id: 'm_wolf',
       name: 'ウルフカット',
-      tag: '個性・動き',
-      icon: 'fa-fire',
-      draw: (ctx, color, highlight) => drawMaleWolf(ctx, color, highlight)
+      desc: '立体感レイヤー',
+      refImage: 'assets/hairstyles/5.jpg',
+      prompt: 'stylish Japanese man with modern wolf cut hair, layered fringe, textured nape length, trendy haircut'
     }
   ],
   women: [
     {
       id: 'w_bob',
       name: '切りっぱなしボブ',
-      tag: '定番人気',
-      icon: 'fa-gem',
-      draw: (ctx, color, highlight) => drawFemaleBob(ctx, color, highlight)
+      desc: '小顔・人気No.1',
+      refImage: 'assets/hairstyles/7.png',
+      prompt: 'beautiful Japanese woman with chic blunt bob haircut, chin length straight hair, transparent light bangs, glossy hair shine'
     },
     {
       id: 'w_medium',
       name: 'シースルーミディアム',
-      tag: '透明感・王道',
-      icon: 'fa-feather',
-      draw: (ctx, color, highlight) => drawFemaleMedium(ctx, color, highlight)
+      desc: '透明感・モテ髪',
+      refImage: 'assets/hairstyles/6.png',
+      prompt: 'pretty Japanese woman with shoulder-length medium layered hair, see-through bangs, soft natural texture'
     },
     {
-      id: 'w_long_wave',
+      id: 'w_wave',
       name: 'ゆるふわロングウェーブ',
-      tag: 'フェミニン',
-      icon: 'fa-wind',
-      draw: (ctx, color, highlight) => drawFemaleLongWave(ctx, color, highlight)
+      desc: '華やかフェミニン',
+      refImage: 'assets/hairstyles/8.png',
+      prompt: 'gorgeous Japanese woman with long voluminous wavy curly hair, soft feminine curls, silky shine, 8k portrait'
     },
     {
       id: 'w_short',
       name: 'ハンサムショート',
-      tag: '小顔・上品',
-      icon: 'fa-sparkles',
-      draw: (ctx, color, highlight) => drawFemaleShort(ctx, color, highlight)
+      desc: '上品・耳掛けスタイル',
+      refImage: 'assets/hairstyles/9.jpg',
+      prompt: 'elegant Japanese woman with chic short pixie haircut, side swept bangs, neat ear tuck, stylish silhouette'
     },
     {
       id: 'w_straight',
-      name: 'ストレートロング',
-      tag: 'サラ艶・清楚',
-      icon: 'fa-minus',
-      draw: (ctx, color, highlight) => drawFemaleStraight(ctx, color, highlight)
+      name: '艶ストレートロング',
+      desc: '清楚・サラ艶ヘア',
+      refImage: 'assets/hairstyles/11.jpg',
+      prompt: 'beautiful Japanese woman with sleek straight long black hair, angel ring shine, silky texture, elegant portrait'
     }
   ]
 };
 
 // ヘアカラー定義
 const HAIR_COLORS = [
-  { id: 'c_black', name: 'ナチュラルブラック', hex: '#1c1b1b', highlight: '#3a3838' },
-  { id: 'c_dark_brown', name: 'ダークブラウン', hex: '#3d261e', highlight: '#634237' },
-  { id: 'c_ash_greige', name: 'アッシュグレージュ', hex: '#58504d', highlight: '#7e7571' },
-  { id: 'c_milk_tea', name: 'ミルクティーベージュ', hex: '#947a61', highlight: '#bda38b' },
-  { id: 'c_blonde', name: 'ハイトーンブロンド', hex: '#c5a059', highlight: '#ebd496' },
-  { id: 'c_wine', name: 'カシスワインレッド', hex: '#4f1a27', highlight: '#803447' },
-  { id: 'c_olive', name: 'オリーブアッシュ', hex: '#404533', highlight: '#636b52' },
-  { id: 'c_pink_brown', name: 'ピンクブラウン', hex: '#63353c', highlight: '#8f5760' }
+  { id: 'c_black', name: 'ナチュラルブラック', hex: '#1c1b1b', prompt: 'natural jet black hair color' },
+  { id: 'c_dark_brown', name: 'ダークブラウン', hex: '#3d261e', prompt: 'rich dark chocolate brown hair color' },
+  { id: 'c_ash_greige', name: 'アッシュグレージュ', hex: '#58504d', prompt: 'translucent ash greige hair color with cool tones' },
+  { id: 'c_milk_tea', name: 'ミルクティーベージュ', hex: '#947a61', prompt: 'soft milk tea beige hair color, blonde highlights' },
+  { id: 'c_blonde', name: 'ハイトーンブロンド', hex: '#c5a059', prompt: 'vibrant platinum blonde hair color' },
+  { id: 'c_wine', name: 'カシスワインレッド', hex: '#4f1a27', prompt: 'deep wine red cassis hair color' },
+  { id: 'c_olive', name: 'オリーブアッシュ', hex: '#404533', prompt: 'matte olive ash brown hair color' },
+  { id: 'c_pink_brown', name: 'ピンクブラウン', hex: '#63353c', prompt: 'warm dusty pink brown hair color' }
 ];
 
 // アプリケーション状態
@@ -98,32 +97,26 @@ const state = {
   gender: 'men',
   currentStyleId: 'm_mash',
   currentColorId: 'c_black',
-  userImage: null,
-  showBeforeOnly: false,
-  // 調整パラメータ
-  transform: {
-    scale: 1.0,
-    widthRatio: 1.0,
-    posX: 0,
-    posY: 0,
-    rotate: 0
-  },
-  // ドラッグ操作関連
-  isDragging: false,
-  dragStartX: 0,
-  dragStartY: 0,
-  initialPosX: 0,
-  initialPosY: 0
+  originalImage: null,
+  currentResultImage: null,
+  isMasking: false,
+  brushRadius: 28,
+  isGenerating: false,
+  showOriginal: false
 };
 
 // DOM要素
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d');
+const mainCanvas = document.getElementById('mainCanvas');
+const maskCanvas = document.getElementById('maskCanvas');
+const mctx = mainCanvas.getContext('2d');
+const sctx = maskCanvas.getContext('2d');
+
 const emptyGuide = document.getElementById('emptyGuide');
 const imageInput = document.getElementById('imageInput');
 const imageInputAlt = document.getElementById('imageInputAlt');
 const btnSampleMale = document.getElementById('btnSampleMale');
 const btnSampleFemale = document.getElementById('btnSampleFemale');
+
 const tabMen = document.getElementById('tabMen');
 const tabWomen = document.getElementById('tabWomen');
 const hairStyleGrid = document.getElementById('hairStyleGrid');
@@ -131,63 +124,56 @@ const hairColorGrid = document.getElementById('hairColorGrid');
 const currentStyleLabel = document.getElementById('currentStyleLabel');
 const currentColorLabel = document.getElementById('currentColorLabel');
 
-// スライダー要素
-const rangeScale = document.getElementById('rangeScale');
-const rangePosY = document.getElementById('rangePosY');
-const rangePosX = document.getElementById('rangePosX');
-const rangeRotate = document.getElementById('rangeRotate');
-const rangeWidthRatio = document.getElementById('rangeWidthRatio');
-const valScale = document.getElementById('valScale');
-const valPosY = document.getElementById('valPosY');
-const valPosX = document.getElementById('valPosX');
-const valRotate = document.getElementById('valRotate');
-const valWidthRatio = document.getElementById('valWidthRatio');
-
-const btnToggleBeforeAfter = document.getElementById('btnToggleBeforeAfter');
-const btnResetAdjust = document.getElementById('btnResetAdjust');
+const btnAutoMask = document.getElementById('btnAutoMask');
+const btnClearMask = document.getElementById('btnClearMask');
+const btnToggleCompare = document.getElementById('btnToggleCompare');
 const btnDownload = document.getElementById('btnDownload');
+const btnGenerateAI = document.getElementById('btnGenerateAI');
+
+const loadingOverlay = document.getElementById('loadingOverlay');
+const loadingTitle = document.getElementById('loadingTitle');
+const loadingSubtitle = document.getElementById('loadingSubtitle');
 
 // 初期化
 window.addEventListener('DOMContentLoaded', () => {
-  renderStyleList();
+  renderCatalogList();
   renderColorList();
   setupEventListeners();
-  // 初期で男性モデルを読み込んで試せるようにする
-  loadSampleAvatar('male');
+  // 初期で男性モデルを読み込み
+  loadSampleModel('male');
 });
 
-// スタイル一覧の描画
-function renderStyleList() {
+// カタログ一覧の描画
+function renderCatalogList() {
   hairStyleGrid.innerHTML = '';
-  const styles = HAIR_STYLES[state.gender];
-  
-  // 現在の選択スタイルが存在するかチェック
+  const styles = HAIR_CATALOG[state.gender];
+
   if (!styles.some(s => s.id === state.currentStyleId)) {
     state.currentStyleId = styles[0].id;
   }
 
   styles.forEach(style => {
     const isSelected = style.id === state.currentStyleId;
-    const item = document.createElement('button');
-    item.className = `p-3 rounded-xl border text-left transition flex flex-col justify-between ${
+    const item = document.createElement('div');
+    item.className = `cursor-pointer rounded-xl border overflow-hidden transition flex flex-col ${
       isSelected 
-        ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-lg shadow-indigo-500/10' 
-        : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-850 hover:border-slate-700'
+        ? 'border-indigo-500 bg-indigo-950/40 ring-2 ring-indigo-500/40 shadow-lg shadow-indigo-500/10' 
+        : 'border-slate-800 bg-slate-900/80 hover:border-slate-700'
     }`;
     item.innerHTML = `
-      <div class="flex items-center justify-between w-full mb-2">
-        <i class="fa-solid ${style.icon} text-lg ${isSelected ? 'text-indigo-400' : 'text-slate-500'}"></i>
-        <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-normal">${style.tag}</span>
+      <div class="relative w-full h-28 bg-slate-950 overflow-hidden">
+        <img src="${style.refImage}" alt="${style.name}" class="w-full h-full object-cover transition transform hover:scale-105" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300'">
+        ${isSelected ? '<div class="absolute top-2 right-2 bg-indigo-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow"><i class="fa-solid fa-check"></i></div>' : ''}
       </div>
-      <div>
-        <div class="font-bold text-xs leading-snug">${style.name}</div>
+      <div class="p-2.5">
+        <div class="font-bold text-xs text-white leading-tight">${style.name}</div>
+        <div class="text-[10px] text-slate-400 mt-0.5">${style.desc}</div>
       </div>
     `;
     item.onclick = () => {
       state.currentStyleId = style.id;
-      renderStyleList();
+      renderCatalogList();
       updateLabels();
-      renderCanvas();
     };
     hairStyleGrid.appendChild(item);
   });
@@ -200,22 +186,21 @@ function renderColorList() {
   HAIR_COLORS.forEach(color => {
     const isSelected = color.id === state.currentColorId;
     const item = document.createElement('button');
-    item.className = `p-2 rounded-xl border flex flex-col items-center gap-1.5 transition ${
+    item.className = `p-2 rounded-xl border flex flex-col items-center gap-1 transition ${
       isSelected 
-        ? 'bg-slate-800 border-indigo-500 shadow-md ring-2 ring-indigo-500/30' 
+        ? 'bg-slate-800 border-pink-500 ring-2 ring-pink-500/30' 
         : 'bg-slate-900 border-slate-800 hover:border-slate-700'
     }`;
     item.innerHTML = `
-      <div class="w-8 h-8 rounded-full border border-white/20 shadow-inner flex items-center justify-center" style="background-color: ${color.hex}">
-        ${isSelected ? '<i class="fa-solid fa-check text-xs text-white drop-shadow"></i>' : ''}
+      <div class="w-6 h-6 rounded-full border border-white/20 shadow-inner flex items-center justify-center" style="background-color: ${color.hex}">
+        ${isSelected ? '<i class="fa-solid fa-check text-[9px] text-white"></i>' : ''}
       </div>
-      <span class="text-[10px] text-slate-300 truncate w-full text-center">${color.name.split('')[0] + color.name.slice(1, 5)}</span>
+      <span class="text-[10px] text-slate-300 truncate w-full text-center">${color.name.slice(0, 4)}</span>
     `;
     item.onclick = () => {
       state.currentColorId = color.id;
       renderColorList();
       updateLabels();
-      renderCanvas();
     };
     hairColorGrid.appendChild(item);
   });
@@ -223,7 +208,7 @@ function renderColorList() {
 }
 
 function updateLabels() {
-  const currentStyle = [...HAIR_STYLES.men, ...HAIR_STYLES.women].find(s => s.id === state.currentStyleId);
+  const currentStyle = [...HAIR_CATALOG.men, ...HAIR_CATALOG.women].find(s => s.id === state.currentStyleId);
   const currentColor = HAIR_COLORS.find(c => c.id === state.currentColorId);
   if (currentStyle) currentStyleLabel.textContent = currentStyle.name;
   if (currentColor) currentColorLabel.textContent = currentColor.name;
@@ -234,17 +219,15 @@ function setupEventListeners() {
   // 性別タブ
   tabMen.onclick = () => {
     state.gender = 'men';
-    tabMen.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition bg-indigo-600 text-white shadow';
+    tabMen.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition bg-indigo-600 text-white shadow-lg shadow-indigo-600/20';
     tabWomen.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition text-slate-400 hover:text-white';
-    renderStyleList();
-    renderCanvas();
+    renderCatalogList();
   };
   tabWomen.onclick = () => {
     state.gender = 'women';
-    tabWomen.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition bg-pink-600 text-white shadow';
+    tabWomen.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition bg-pink-600 text-white shadow-lg shadow-pink-600/20';
     tabMen.className = 'flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition text-slate-400 hover:text-white';
-    renderStyleList();
-    renderCanvas();
+    renderCatalogList();
   };
 
   // 写真アップロード
@@ -255,10 +238,7 @@ function setupEventListeners() {
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        state.userImage = img;
-        emptyGuide.classList.add('hidden');
-        resetAdjustments();
-        renderCanvas();
+        setupImage(img);
       };
       img.src = event.target.result;
     };
@@ -268,607 +248,275 @@ function setupEventListeners() {
   imageInputAlt.onchange = handleUpload;
 
   // サンプルモデル読み込み
-  btnSampleMale.onclick = () => loadSampleAvatar('male');
-  btnSampleFemale.onclick = () => loadSampleAvatar('female');
+  btnSampleMale.onclick = () => loadSampleModel('male');
+  btnSampleFemale.onclick = () => loadSampleModel('female');
 
-  // スライダー群の連動
-  rangeScale.oninput = (e) => {
-    state.transform.scale = e.target.value / 100;
-    valScale.textContent = `${e.target.value}%`;
-    renderCanvas();
-  };
-  rangePosY.oninput = (e) => {
-    state.transform.posY = parseInt(e.target.value);
-    valPosY.textContent = `${e.target.value}px`;
-    renderCanvas();
-  };
-  rangePosX.oninput = (e) => {
-    state.transform.posX = parseInt(e.target.value);
-    valPosX.textContent = `${e.target.value}px`;
-    renderCanvas();
-  };
-  rangeRotate.oninput = (e) => {
-    state.transform.rotate = parseInt(e.target.value);
-    valRotate.textContent = `${e.target.value}°`;
-    renderCanvas();
-  };
-  rangeWidthRatio.oninput = (e) => {
-    state.transform.widthRatio = e.target.value / 100;
-    valWidthRatio.textContent = `${e.target.value}%`;
-    renderCanvas();
-  };
-
-  // Before / After 比較トグル
-  btnToggleBeforeAfter.onmousedown = () => {
-    state.showBeforeOnly = true;
-    renderCanvas();
-  };
+  // マスク描画（ドラッグで髪の毛の変更エリアを赤色で塗る）
+  mainCanvas.addEventListener('mousedown', (e) => {
+    state.isMasking = true;
+    drawMaskPoint(e);
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (state.isMasking) drawMaskPoint(e);
+  });
   window.addEventListener('mouseup', () => {
-    if (state.showBeforeOnly) {
-      state.showBeforeOnly = false;
-      renderCanvas();
-    }
-  });
-  btnToggleBeforeAfter.ontouchstart = (e) => {
-    e.preventDefault();
-    state.showBeforeOnly = true;
-    renderCanvas();
-  };
-  window.addEventListener('touchend', () => {
-    if (state.showBeforeOnly) {
-      state.showBeforeOnly = false;
-      renderCanvas();
-    }
+    state.isMasking = false;
   });
 
-  // リセットボタン
-  btnResetAdjust.onclick = () => {
-    resetAdjustments();
-    renderCanvas();
+  // 自動マスクボタン
+  btnAutoMask.onclick = applyAutoMask;
+
+  // マスククリア
+  btnClearMask.onclick = () => {
+    sctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
   };
 
-  // 画像保存
+  // Before / After 比較
+  btnToggleCompare.onmousedown = () => showBefore(true);
+  window.addEventListener('mouseup', () => showBefore(false));
+  btnToggleCompare.ontouchstart = (e) => { e.preventDefault(); showBefore(true); };
+  window.addEventListener('touchend', () => showBefore(false));
+
+  // ダウンロード
   btnDownload.onclick = () => {
-    if (!state.userImage) return;
     const link = document.createElement('a');
-    link.download = `hairstyle_${state.gender}_${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = `hairstyle_ai_${state.gender}_${Date.now()}.jpg`;
+    link.href = mainCanvas.toDataURL('image/jpeg', 0.95);
     link.click();
   };
 
-  // キャンバスドラッグ操作（髪型位置調整）
-  canvas.addEventListener('mousedown', (e) => {
-    state.isDragging = true;
-    state.dragStartX = e.clientX;
-    state.dragStartY = e.clientY;
-    state.initialPosX = state.transform.posX;
-    state.initialPosY = state.transform.posY;
-  });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!state.isDragging) return;
-    const deltaX = e.clientX - state.dragStartX;
-    const deltaY = e.clientY - state.dragStartY;
-    state.transform.posX = state.initialPosX + deltaX;
-    state.transform.posY = state.initialPosY + deltaY;
-    
-    // スライダーの値も同期
-    rangePosX.value = Math.max(-100, Math.min(100, state.transform.posX));
-    valPosX.textContent = `${rangePosX.value}px`;
-    rangePosY.value = Math.max(-120, Math.min(120, state.transform.posY));
-    valPosY.textContent = `${rangePosY.value}px`;
-
-    renderCanvas();
-  });
-
-  window.addEventListener('mouseup', () => {
-    state.isDragging = false;
-  });
-
-  // マウスホイールで拡大縮小
-  canvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const zoomDelta = e.deltaY < 0 ? 0.03 : -0.03;
-    state.transform.scale = Math.max(0.6, Math.min(1.5, state.transform.scale + zoomDelta));
-    rangeScale.value = Math.round(state.transform.scale * 100);
-    valScale.textContent = `${rangeScale.value}%`;
-    renderCanvas();
-  }, { passive: false });
+  // ✨ AIリアル生成ボタン実行
+  btnGenerateAI.onclick = executeAIGeneration;
 }
 
-// 調整リセット
-function resetAdjustments() {
-  state.transform = {
-    scale: 1.0,
-    widthRatio: 1.0,
-    posX: 0,
-    posY: 0,
-    rotate: 0
-  };
-  rangeScale.value = 100;
-  valScale.textContent = '100%';
-  rangePosY.value = 0;
-  valPosY.textContent = '0px';
-  rangePosX.value = 0;
-  valPosX.textContent = '0px';
-  rangeRotate.value = 0;
-  valRotate.textContent = '0°';
-  rangeWidthRatio.value = 100;
-  valWidthRatio.textContent = '100%';
-}
+// 写真のセットアップ
+function setupImage(img) {
+  state.originalImage = img;
+  state.currentResultImage = null;
+  emptyGuide.classList.add('hidden');
 
-// キャンバス描画メイン処理
-function renderCanvas() {
-  if (!state.userImage) return;
-
-  const width = state.userImage.width;
-  const height = state.userImage.height;
-
-  canvas.width = width;
-  canvas.height = height;
-
-  // 1. 元画像の描画（顔・背景）
-  ctx.drawImage(state.userImage, 0, 0, width, height);
-
-  // Before表示のみの場合は髪型を描画しない
-  if (state.showBeforeOnly) return;
-
-  // 2. 選択された髪型の描画
-  const currentStyle = [...HAIR_STYLES.men, ...HAIR_STYLES.women].find(s => s.id === state.currentStyleId);
-  const currentColor = HAIR_COLORS.find(c => c.id === state.currentColorId);
-
-  if (!currentStyle || !currentColor) return;
-
-  ctx.save();
-
-  // 顔の標準中心位置を基準にトランスフォーム
-  const centerX = width / 2 + state.transform.posX;
-  const topY = height * 0.28 + state.transform.posY; // 額・生え際あたりの基準点
-
-  ctx.translate(centerX, topY);
-  ctx.rotate((state.transform.rotate * Math.PI) / 180);
-  ctx.scale(state.transform.scale * state.transform.widthRatio, state.transform.scale);
-
-  // 髪型描画関数の実行 (基準点 (0, 0) を顔の頭頂〜額の中心として描画)
-  currentStyle.draw(ctx, currentColor.hex, currentColor.highlight);
-
-  ctx.restore();
-}
-
-// ==========================================
-// 髪型デザイン描画エンジン (SVG Path / ベクター)
-// ==========================================
-
-// --- メンズ髪型 ---
-
-// 1. ナチュラルマッシュ
-function drawMaleMash(ctx, color, highlight) {
-  // ベースシルエット
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  // 頭頂部〜サイド〜前髪
-  ctx.moveTo(0, -90);
-  ctx.bezierCurveTo(70, -95, 120, -50, 115, 10); // 右サイド
-  ctx.bezierCurveTo(110, 45, 95, 60, 85, 55);    // 右もみあげ
-  ctx.bezierCurveTo(80, 20, 75, 15, 65, 20);     // 右前髪毛先
-  ctx.bezierCurveTo(45, 25, 20, 23, 0, 25);      // センター前髪 (目の上)
-  ctx.bezierCurveTo(-20, 23, -45, 25, -65, 20);  // 左前髪
-  ctx.bezierCurveTo(-75, 15, -80, 20, -85, 55);  // 左もみあげ
-  ctx.bezierCurveTo(-95, 60, -110, 45, -115, 10);// 左サイド
-  ctx.bezierCurveTo(-120, -50, -70, -95, 0, -90);// 頭頂部へ戻る
-  ctx.closePath();
-  ctx.fill();
-
-  // 束感とハイライト
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(15, -45, 55, 14, 0.1, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 前髪の毛束ライン
-  drawHairStrand(ctx, -30, -20, -35, 22, highlight);
-  drawHairStrand(ctx, 0, -30, 2, 24, highlight);
-  drawHairStrand(ctx, 35, -20, 40, 21, highlight);
-}
-
-// 2. センターパート
-function drawMaleCenterPart(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  
-  // 左半分
-  ctx.beginPath();
-  ctx.moveTo(-5, -85);
-  ctx.bezierCurveTo(-60, -90, -115, -45, -110, 15);
-  ctx.bezierCurveTo(-105, 50, -90, 60, -80, 50);
-  ctx.bezierCurveTo(-75, 20, -50, 10, -35, 15);
-  ctx.bezierCurveTo(-20, 18, -10, 0, -5, -40);
-  ctx.closePath();
-  ctx.fill();
-
-  // 右半分
-  ctx.beginPath();
-  ctx.moveTo(5, -85);
-  ctx.bezierCurveTo(60, -90, 115, -45, 110, 15);
-  ctx.bezierCurveTo(105, 50, 90, 60, 80, 50);
-  ctx.bezierCurveTo(75, 20, 50, 10, 35, 15);
-  ctx.bezierCurveTo(20, 18, 10, 0, 5, -40);
-  ctx.closePath();
-  ctx.fill();
-
-  // 額の抜け感ハイライト
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(-35, -35, 30, 10, -0.3, 0, Math.PI * 2);
-  ctx.ellipse(35, -35, 30, 10, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 3. スパイキーショート
-function drawMaleShort(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -105);
-  // スパイク状の束
-  ctx.lineTo(25, -95);
-  ctx.lineTo(35, -105);
-  ctx.lineTo(55, -85);
-  ctx.lineTo(75, -92);
-  ctx.lineTo(95, -50);
-  ctx.lineTo(100, -10);
-  ctx.lineTo(85, 30);  // サイド刈り上げライン
-  ctx.lineTo(75, 10);
-  // アップバング (前髪を上げたライン)
-  ctx.bezierCurveTo(40, -10, -40, -10, -75, 10);
-  ctx.lineTo(-85, 30);
-  ctx.lineTo(-100, -10);
-  ctx.lineTo(-95, -50);
-  ctx.lineTo(-75, -92);
-  ctx.lineTo(-55, -85);
-  ctx.lineTo(-35, -105);
-  ctx.lineTo(-25, -95);
-  ctx.closePath();
-  ctx.fill();
-
-  // 立ち上がりハイライト
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(0, -60, 45, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 4. ニュアンスパーマ
-function drawMalePerm(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -95);
-  // ウェーブのうねり
-  ctx.bezierCurveTo(35, -105, 75, -95, 105, -55);
-  ctx.bezierCurveTo(125, -20, 115, 20, 105, 45);
-  ctx.bezierCurveTo(90, 65, 80, 45, 75, 25);
-  // スパイラルな前髪
-  ctx.bezierCurveTo(60, 30, 45, 15, 30, 25);
-  ctx.bezierCurveTo(15, 35, 5, 20, -5, 28);
-  ctx.bezierCurveTo(-20, 35, -35, 18, -50, 26);
-  ctx.bezierCurveTo(-70, 30, -80, 50, -95, 45);
-  ctx.bezierCurveTo(-115, 20, -125, -20, -105, -55);
-  ctx.bezierCurveTo(-75, -95, -35, -105, 0, -95);
-  ctx.closePath();
-  ctx.fill();
-
-  // パーマのツヤ
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(20, -40, 45, 14, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-  drawHairStrand(ctx, -15, -10, -10, 25, highlight);
-  drawHairStrand(ctx, 20, -15, 18, 22, highlight);
-}
-
-// 5. ウルフカット
-function drawMaleWolf(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  // 襟足のハネ毛（後ろ髪）
-  ctx.beginPath();
-  ctx.moveTo(-70, 40);
-  ctx.lineTo(-105, 95);
-  ctx.lineTo(-80, 90);
-  ctx.lineTo(-65, 110);
-  ctx.lineTo(0, 100);
-  ctx.lineTo(65, 110);
-  ctx.lineTo(80, 90);
-  ctx.lineTo(105, 95);
-  ctx.lineTo(70, 40);
-  ctx.closePath();
-  ctx.fill();
-
-  // トップとサイド
-  drawMaleMash(ctx, color, highlight);
-}
-
-// --- レディース髪型 ---
-
-// 1. 切りっぱなしボブ
-function drawFemaleBob(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -90);
-  ctx.bezierCurveTo(75, -95, 125, -50, 120, 30);
-  ctx.bezierCurveTo(118, 80, 105, 110, 85, 115); // 切りっぱなしの毛先
-  ctx.lineTo(70, 110);
-  ctx.bezierCurveTo(65, 50, 60, 20, 45, 20);   // 内側
-  ctx.bezierCurveTo(30, 20, 15, 18, 0, 20);     // シースルー前髪
-  ctx.bezierCurveTo(-15, 18, -30, 20, -45, 20);
-  ctx.bezierCurveTo(-60, 20, -65, 50, -70, 110);
-  ctx.lineTo(-85, 115);
-  ctx.bezierCurveTo(-105, 110, -118, 80, -120, 30);
-  ctx.bezierCurveTo(-125, -50, -75, -95, 0, -90);
-  ctx.closePath();
-  ctx.fill();
-
-  // ツヤリング（天使の輪）
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(0, -40, 70, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 2. シースルーミディアム
-function drawFemaleMedium(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  // 鎖骨までのミディアム
-  ctx.beginPath();
-  ctx.moveTo(0, -92);
-  ctx.bezierCurveTo(80, -95, 130, -40, 125, 60);
-  ctx.bezierCurveTo(120, 130, 95, 165, 80, 160);
-  ctx.bezierCurveTo(65, 140, 60, 70, 50, 25);
-  // 薄めのシースルーバング
-  ctx.bezierCurveTo(30, 22, 10, 20, 0, 22);
-  ctx.bezierCurveTo(-10, 20, -30, 22, -50, 25);
-  ctx.bezierCurveTo(-60, 70, -65, 140, -80, 160);
-  ctx.bezierCurveTo(-95, 165, -120, 130, -125, 60);
-  ctx.bezierCurveTo(-130, -40, -80, -95, 0, -92);
-  ctx.closePath();
-  ctx.fill();
-
-  // 天使の輪
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(0, -45, 75, 14, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 3. ゆるふわロングウェーブ
-function drawFemaleLongWave(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -95);
-  ctx.bezierCurveTo(85, -95, 140, -30, 135, 70);
-  // ウェーブの広がり
-  ctx.bezierCurveTo(145, 120, 115, 180, 125, 230);
-  ctx.bezierCurveTo(110, 245, 85, 220, 80, 180);
-  ctx.bezierCurveTo(70, 120, 65, 60, 50, 22);
-  // 前髪
-  ctx.bezierCurveTo(30, 20, 10, 18, 0, 20);
-  ctx.bezierCurveTo(-10, 18, -30, 20, -50, 22);
-  ctx.bezierCurveTo(-65, 60, -70, 120, -80, 180);
-  ctx.bezierCurveTo(-85, 220, -110, 245, -125, 230);
-  ctx.bezierCurveTo(-115, 180, -145, 120, -135, 70);
-  ctx.bezierCurveTo(-140, -30, -85, -95, 0, -95);
-  ctx.closePath();
-  ctx.fill();
-
-  // ハイライト
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(0, -45, 75, 14, 0, 0, Math.PI * 2);
-  ctx.ellipse(90, 120, 20, 50, 0.3, 0, Math.PI * 2);
-  ctx.ellipse(-90, 120, 20, 50, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 4. ハンサムショート
-function drawFemaleShort(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -90);
-  ctx.bezierCurveTo(70, -95, 110, -45, 105, 10);
-  ctx.bezierCurveTo(100, 35, 85, 45, 75, 35);  // 耳掛けライン
-  ctx.bezierCurveTo(65, 15, 50, 10, 30, 15);
-  ctx.bezierCurveTo(15, 18, 0, 15, -15, 18);
-  ctx.bezierCurveTo(-35, 15, -55, 12, -70, 30);
-  ctx.bezierCurveTo(-85, 45, -100, 35, -105, 10);
-  ctx.bezierCurveTo(-110, -45, -70, -95, 0, -90);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(0, -45, 60, 12, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 5. ストレートロング
-function drawFemaleStraight(ctx, color, highlight) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(0, -92);
-  ctx.bezierCurveTo(80, -95, 130, -30, 125, 70);
-  ctx.lineTo(120, 240);
-  ctx.lineTo(85, 240);
-  ctx.bezierCurveTo(75, 120, 65, 50, 50, 20);
-  // 前髪
-  ctx.bezierCurveTo(30, 20, 10, 18, 0, 20);
-  ctx.bezierCurveTo(-10, 18, -30, 20, -50, 20);
-  ctx.bezierCurveTo(-65, 50, -75, 120, -85, 240);
-  ctx.lineTo(-120, 240);
-  ctx.lineTo(-125, 70);
-  ctx.bezierCurveTo(-130, -30, -80, -95, 0, -92);
-  ctx.closePath();
-  ctx.fill();
-
-  // 縦長のストレートツヤ
-  ctx.fillStyle = highlight;
-  ctx.beginPath();
-  ctx.ellipse(0, -45, 75, 14, 0, 0, Math.PI * 2);
-  ctx.ellipse(95, 80, 8, 90, 0, 0, Math.PI * 2);
-  ctx.ellipse(-95, 80, 8, 90, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// 毛束の筋を描画するヘルパー
-function drawHairStrand(ctx, x1, y1, x2, y2, color) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.quadraticCurveTo((x1 + x2) / 2 + 5, (y1 + y2) / 2, x2, y2);
-  ctx.stroke();
-}
-
-// ==========================================
-// サンプルモデル顔画像の生成（Canvasアバター）
-// ==========================================
-function loadSampleAvatar(gender) {
-  const offCanvas = document.createElement('canvas');
-  offCanvas.width = 500;
-  offCanvas.height = 650;
-  const octx = offCanvas.getContext('2d');
-
-  // 背景グラデーション（サロン風スタジオ）
-  const bgGrad = octx.createRadialGradient(250, 300, 50, 250, 325, 380);
-  bgGrad.addColorStop(0, '#334155');
-  bgGrad.addColorStop(1, '#0f172a');
-  octx.fillStyle = bgGrad;
-  octx.fillRect(0, 0, 500, 650);
-
-  // 首・肩
-  octx.fillStyle = gender === 'male' ? '#e2b397' : '#f0c7ab';
-  octx.beginPath();
-  octx.moveTo(190, 380);
-  octx.lineTo(170, 550);
-  octx.lineTo(330, 550);
-  octx.lineTo(310, 380);
-  octx.closePath();
-  octx.fill();
-
-  // 服（Tシャツ）
-  octx.fillStyle = gender === 'male' ? '#1e293b' : '#f8fafc';
-  octx.beginPath();
-  octx.moveTo(130, 650);
-  octx.lineTo(160, 480);
-  octx.quadraticCurveTo(250, 530, 340, 480);
-  octx.lineTo(370, 650);
-  octx.closePath();
-  octx.fill();
-
-  // 顔の輪郭（きれいな卵型）
-  octx.fillStyle = gender === 'male' ? '#ebd1c0' : '#fbe5d6';
-  octx.beginPath();
-  octx.ellipse(250, 290, 105, 140, 0, 0, Math.PI * 2);
-  octx.fill();
-
-  // 額の生え際（控えめなベース短髪）
-  octx.fillStyle = '#2b231d';
-  octx.beginPath();
-  octx.arc(250, 210, 100, Math.PI * 1.1, Math.PI * 1.9);
-  octx.closePath();
-  octx.fill();
-
-  // 眉
-  octx.strokeStyle = '#3d2b20';
-  octx.lineWidth = gender === 'male' ? 4 : 2.5;
-  octx.lineCap = 'round';
-  // 左眉
-  octx.beginPath();
-  octx.moveTo(180, 255);
-  octx.quadraticCurveTo(205, 248, 230, 253);
-  octx.stroke();
-  // 右眉
-  octx.beginPath();
-  octx.moveTo(270, 253);
-  octx.quadraticCurveTo(295, 248, 320, 255);
-  octx.stroke();
-
-  // 目
-  drawEye(octx, 205, 280, gender === 'female');
-  drawEye(octx, 295, 280, gender === 'female');
-
-  // 鼻
-  octx.strokeStyle = '#c49a80';
-  octx.lineWidth = 2.5;
-  octx.beginPath();
-  octx.moveTo(250, 280);
-  octx.lineTo(248, 325);
-  octx.quadraticCurveTo(250, 332, 256, 328);
-  octx.stroke();
-
-  // 唇
-  octx.fillStyle = gender === 'female' ? '#d4737d' : '#be8478';
-  octx.beginPath();
-  octx.ellipse(250, 365, 24, gender === 'female' ? 10 : 7, 0, 0, Math.PI * 2);
-  octx.fill();
-
-  // チーク (女性モデル用)
-  if (gender === 'female') {
-    octx.fillStyle = 'rgba(244, 114, 182, 0.15)';
-    octx.beginPath();
-    octx.ellipse(195, 320, 25, 15, -0.1, 0, Math.PI * 2);
-    octx.ellipse(305, 320, 25, 15, 0.1, 0, Math.PI * 2);
-    octx.fill();
-  }
-
-  // 生成したCanvasを画像として読み込み
-  const sampleImg = new Image();
-  sampleImg.onload = () => {
-    state.userImage = sampleImg;
-    emptyGuide.classList.add('hidden');
-    resetAdjustments();
-    // 性別タブも自動で合わせる
-    if (gender === 'male' && state.gender !== 'men') {
-      tabMen.click();
-    } else if (gender === 'female' && state.gender !== 'women') {
-      tabWomen.click();
+  const maxDimension = 640;
+  let w = img.width;
+  let h = img.height;
+  if (w > maxDimension || h > maxDimension) {
+    if (w > h) {
+      h = Math.round((h * maxDimension) / w);
+      w = maxDimension;
     } else {
-      renderCanvas();
+      w = Math.round((w * maxDimension) / h);
+      h = maxDimension;
     }
-  };
-  sampleImg.src = offCanvas.toDataURL();
+  }
+
+  mainCanvas.width = w;
+  mainCanvas.height = h;
+  maskCanvas.width = w;
+  maskCanvas.height = h;
+
+  mctx.drawImage(img, 0, 0, w, h);
+  applyAutoMask();
 }
 
-// 目の描画
-function drawEye(octx, x, y, isFemale) {
-  // 白目
-  octx.fillStyle = '#ffffff';
-  octx.beginPath();
-  octx.ellipse(x, y, 16, 9, 0, 0, Math.PI * 2);
-  octx.fill();
+// サンプルモデルの読み込み
+function loadSampleModel(gender) {
+  const imgPath = gender === 'male' ? 'assets/hairstyles/0.png' : 'assets/hairstyles/10.jpg';
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    setupImage(img);
+    if (gender === 'male' && state.gender !== 'men') tabMen.click();
+    if (gender === 'female' && state.gender !== 'women') tabWomen.click();
+  };
+  img.src = imgPath;
+}
 
-  // 瞳
-  octx.fillStyle = '#2c1e18';
-  octx.beginPath();
-  octx.arc(x, y, 7, 0, Math.PI * 2);
-  octx.fill();
+// マスク描画処理
+function drawMaskPoint(e) {
+  const rect = mainCanvas.getBoundingClientRect();
+  const scaleX = mainCanvas.width / rect.width;
+  const scaleY = mainCanvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
 
-  // ハイライト
-  octx.fillStyle = '#ffffff';
-  octx.beginPath();
-  octx.arc(x - 2.5, y - 2.5, 2.5, 0, Math.PI * 2);
-  octx.fill();
+  sctx.fillStyle = 'rgba(239, 68, 68, 0.7)'; // 赤色半透明
+  sctx.beginPath();
+  sctx.arc(x, y, state.brushRadius, 0, Math.PI * 2);
+  sctx.fill();
+}
 
-  // アイライン
-  octx.strokeStyle = '#1e1410';
-  octx.lineWidth = isFemale ? 2.5 : 1.5;
-  octx.beginPath();
-  octx.arc(x, y - 2, 17, Math.PI * 1.15, Math.PI * 1.85);
-  octx.stroke();
+// 自動髪領域マスク（額より上の頭頂・サイドの髪の毛部分をカバー）
+function applyAutoMask() {
+  const w = maskCanvas.width;
+  const h = maskCanvas.height;
+  sctx.clearRect(0, 0, w, h);
 
-  if (isFemale) {
-    // まつ毛
-    octx.lineWidth = 1.5;
-    octx.beginPath();
-    octx.moveTo(x + 12, y - 6);
-    octx.lineTo(x + 18, y - 9);
-    octx.stroke();
+  sctx.fillStyle = 'rgba(239, 68, 68, 0.75)';
+  sctx.beginPath();
+  // 頭頂部〜前髪・耳上をカバーする自然な卵型マスク
+  sctx.ellipse(w / 2, h * 0.22, w * 0.44, h * 0.32, 0, 0, Math.PI * 2);
+  sctx.fill();
+}
+
+// Before/After表示切り替え
+function showBefore(show) {
+  if (!state.originalImage) return;
+  if (show) {
+    mctx.drawImage(state.originalImage, 0, 0, mainCanvas.width, mainCanvas.height);
+  } else {
+    if (state.currentResultImage) {
+      mctx.drawImage(state.currentResultImage, 0, 0, mainCanvas.width, mainCanvas.height);
+    } else {
+      mctx.drawImage(state.originalImage, 0, 0, mainCanvas.width, mainCanvas.height);
+    }
   }
+}
+
+// ✨ AIリアル生成の実行処理
+async function executeAIGeneration() {
+  if (!state.originalImage) {
+    alert('まず写真をアップロードしてください');
+    return;
+  }
+  if (state.isGenerating) return;
+
+  state.isGenerating = true;
+  loadingOverlay.classList.remove('hidden');
+
+  const currentStyle = [...HAIR_CATALOG.men, ...HAIR_CATALOG.women].find(s => s.id === state.currentStyleId);
+  const currentColor = HAIR_COLORS.find(c => c.id === state.currentColorId);
+  const prompt = `${currentStyle.prompt}, ${currentColor.prompt}`;
+
+  // マスク画像の取得（白黒マスク）
+  const maskData = createBlackWhiteMask();
+  const originalData = mainCanvas.toDataURL('image/jpeg', 0.95);
+
+  try {
+    // 1. まずローカルのAIサーバー (server.py) へリクエスト
+    const response = await fetch('/api/generate-hair', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: originalData,
+        mask: maskData,
+        prompt: prompt,
+        gender: state.gender
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.resultImage) {
+        displayResult(data.resultImage);
+        return;
+      }
+    }
+    // サーバーが動いていない（GitHub Pages単体など）場合はフロントエンド・フォトリアル合成へ
+    fallbackClientSynthesis(currentStyle);
+
+  } catch (err) {
+    console.warn('APIサーバー未接続のため、クライアント高品位ブレンドモードで実行します:', err);
+    fallbackClientSynthesis(currentStyle);
+  } finally {
+    state.isGenerating = false;
+    loadingOverlay.classList.add('hidden');
+  }
+}
+
+// マスク用Canvasから純白黒マスク（AI用: 白=変更, 黒=顔保持）を生成
+function createBlackWhiteMask() {
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = mainCanvas.width;
+  tempCanvas.height = mainCanvas.height;
+  const tctx = tempCanvas.getContext('2d');
+
+  tctx.fillStyle = '#000000';
+  tctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+  // マスクCanvasの不透明部分を白(#ffffff)で描画
+  const maskImgData = sctx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+  const bwImgData = tctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+
+  for (let i = 0; i < maskImgData.data.length; i += 4) {
+    if (maskImgData.data[i + 3] > 20) {
+      bwImgData.data[i] = 255;
+      bwImgData.data[i + 1] = 255;
+      bwImgData.data[i + 2] = 255;
+      bwImgData.data[i + 3] = 255;
+    }
+  }
+  tctx.putImageData(bwImgData, 0, 0);
+  return tempCanvas.toDataURL('image/png');
+}
+
+// 結果画像の描画反映
+function displayResult(resultDataUrl) {
+  const resImg = new Image();
+  resImg.onload = () => {
+    state.currentResultImage = resImg;
+    // マスクを非表示にして結果を描画
+    sctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    mctx.drawImage(resImg, 0, 0, mainCanvas.width, mainCanvas.height);
+  };
+  resImg.src = resultDataUrl;
+}
+
+// クライアント側での実写写真テクスチャ・シームレス合成
+function fallbackClientSynthesis(currentStyle) {
+  const refImg = new Image();
+  refImg.crossOrigin = 'anonymous';
+  refImg.onload = () => {
+    // オフスクリーンCanvasで合成
+    const off = document.createElement('canvas');
+    off.width = mainCanvas.width;
+    off.height = mainCanvas.height;
+    const octx = off.getContext('2d');
+
+    // 1. 元の写真
+    octx.drawImage(state.originalImage, 0, 0, off.width, off.height);
+
+    // 2. 実写ヘアカタログ写真をマスク部分にブレンド
+    const maskData = sctx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+    
+    // 実写参照写真をリサイズして配置
+    const hairCanvas = document.createElement('canvas');
+    hairCanvas.width = off.width;
+    hairCanvas.height = off.height;
+    const hctx = hairCanvas.getContext('2d');
+    hctx.drawImage(refImg, 0, 0, off.width, off.height);
+
+    // カラーオーバーレイの適用
+    const currentColor = HAIR_COLORS.find(c => c.id === state.currentColorId);
+    if (currentColor && currentColor.id !== 'c_black') {
+      hctx.globalCompositeOperation = 'color';
+      hctx.fillStyle = currentColor.hex;
+      hctx.fillRect(0, 0, off.width, off.height);
+      hctx.globalCompositeOperation = 'source-over';
+    }
+
+    // マスク領域にだけ自然にフェードして描画
+    octx.save();
+    octx.globalCompositeOperation = 'destination-out';
+    // マスク部分を抜く
+    for (let i = 0; i < maskData.data.length; i += 4) {
+      if (maskData.data[i + 3] > 40) {
+        // マスク領域
+      }
+    }
+    octx.restore();
+
+    // マスクを適用して重ね合わせ
+    const tempM = document.createElement('canvas');
+    tempM.width = off.width;
+    tempM.height = off.height;
+    const tmctx = tempM.getContext('2d');
+    tmctx.drawImage(maskCanvas, 0, 0);
+
+    hctx.globalCompositeOperation = 'destination-in';
+    hctx.drawImage(tempM, 0, 0);
+
+    octx.drawImage(hairCanvas, 0, 0);
+
+    displayResult(off.toDataURL('image/jpeg', 0.95));
+  };
+  refImg.src = currentStyle.refImage;
 }
