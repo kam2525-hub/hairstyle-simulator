@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI HairStyle Studio - ヘアスタイル シミュレーター</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .checkerboard {
+      background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+    input[type=range] {
+      accent-color: #6366f1;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- ヘッダー -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-wand-magic-sparkles text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+            HairStyle Studio
+          </h1>
+          <p class="text-xs text-slate-400">顔を変えずに試せるバーチャルサロン (無料)</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          ブラウザ完結 (安全・無料)
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- 左側: プレビュー & キャンバス (7カラム) -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
+      <!-- プレビューコンテナ -->
+      <div class="relative bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col items-center justify-center min-h-[480px] p-4">
+        
+        <!-- キャンバスラッパー -->
+        <div id="canvas-wrapper" class="relative max-w-full max-h-[580px] rounded-xl overflow-hidden shadow-lg checkerboard">
+          <canvas id="mainCanvas" class="block max-w-full h-auto cursor-grab active:cursor-grabbing"></canvas>
+          
+          <!-- ガイド枠（未アップロード時など） -->
+          <div id="emptyGuide" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-900/90 backdrop-blur-sm">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-2xl mb-4">
+              <i class="fa-regular fa-image"></i>
+            </div>
+            <h3 class="font-bold text-lg text-white mb-2">自分の写真をアップロード</h3>
+            <p class="text-xs text-slate-400 max-w-sm mb-5 leading-relaxed">
+              正面から撮影した、前髪をあげた写真や額が見える写真がもっとも綺麗に試せます。下のボタンから選ぶか、サンプルで試せます。
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <label class="cursor-pointer px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                写真をアップロード
+                <input type="file" id="imageInput" accept="image/*" class="hidden">
+              </label>
+              <button id="btnSampleMale" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm border border-slate-700 transition">
+                👨 男性モデルで試す
+              </button>
+              <button id="btnSampleFemale" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm border border-slate-700 transition">
+                👩 女性モデルで試す
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ツールバー（キャンバス下部） -->
+        <div class="w-full mt-4 flex items-center justify-between gap-2 border-t border-slate-800/80 pt-3">
+          <div class="flex items-center gap-2">
+            <button id="btnToggleBeforeAfter" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-eye"></i> Before確認 (長押し)
+            </button>
+            <button id="btnResetAdjust" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">
+              <i class="fa-solid fa-rotate-left"></i> リセット
+            </button>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-camera"></i> 写真変更
+              <input type="file" id="imageInputAlt" accept="image/*" class="hidden">
+            </label>
+            <button id="btnDownload" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition">
+              <i class="fa-solid fa-download"></i> 画像を保存
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 写真操作ヒント -->
+      <div class="text-xs text-slate-400 bg-slate-950/50 p-3 rounded-xl border border-slate-800/60 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-indigo-400"></i>
+        <span>キャンバス上の髪型を直接ドラッグして位置を移動できます。マウスホイールやスライダーでサイズを微調整してください。</span>
+      </div>
+    </div>
+
+    <!-- 右側: スタイル・カラー・調整パネル (5カラム) -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- 性別タブ（Men's / Women's） -->
+      <div class="bg-slate-950 p-1.5 rounded-2xl border border-slate-800 flex">
+        <button id="tabMen" class="flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition bg-indigo-600 text-white shadow">
+          <i class="fa-solid fa-mars"></i> Men's (メンズ)
+        </button>
+        <button id="tabWomen" class="flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition text-slate-400 hover:text-white">
+          <i class="fa-solid fa-venus"></i> Women's (レディース)
+        </button>
+      </div>
+
+      <!-- ヘアスタイル選択 -->
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold flex items-center gap-2 text-slate-200">
+            <i class="fa-solid fa-scissors text-indigo-400"></i>
+            ヘアスタイルを選択
+          </h2>
+          <span id="currentStyleLabel" class="text-xs text-indigo-400 font-medium bg-indigo-500/10 px-2 py-0.5 rounded">
+            ナチュラルマッシュ
+          </span>
+        </div>
+        
+        <!-- スタイル一覧グリッド -->
+        <div id="hairStyleGrid" class="grid grid-cols-3 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+          <!-- JSで動的生成 -->
+        </div>
+      </div>
+
+      <!-- ヘアカラー選択 -->
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold flex items-center gap-2 text-slate-200">
+            <i class="fa-solid fa-palette text-pink-400"></i>
+            ヘアカラーを選択
+          </h2>
+          <span id="currentColorLabel" class="text-xs text-pink-400 font-medium bg-pink-500/10 px-2 py-0.5 rounded">
+            ナチュラルブラック
+          </span>
+        </div>
+        
+        <!-- カラーパレット -->
+        <div id="hairColorGrid" class="grid grid-cols-4 gap-2">
+          <!-- JSで動的生成 -->
+        </div>
+      </div>
+
+      <!-- 位置・サイズ微調整コントロール -->
+      <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+        <h2 class="text-sm font-bold flex items-center gap-2 text-slate-200">
+          <i class="fa-solid fa-sliders text-indigo-400"></i>
+          髪型フィット微調整
+        </h2>
+
+        <div class="space-y-3 text-xs">
+          <!-- サイズ調整 -->
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>大きさ (拡大・縮小)</span>
+              <span id="valScale">100%</span>
+            </div>
+            <input type="range" id="rangeScale" min="60" max="150" value="100" class="w-full">
+          </div>
+
+          <!-- 上下位置 -->
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>上下位置 (額・生え際)</span>
+              <span id="valPosY">0px</span>
+            </div>
+            <input type="range" id="rangePosY" min="-120" max="120" value="0" class="w-full">
+          </div>
+
+          <!-- 左右位置 -->
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>左右位置</span>
+              <span id="valPosX">0px</span>
+            </div>
+            <input type="range" id="rangePosX" min="-100" max="100" value="0" class="w-full">
+          </div>
+
+          <!-- 角度回転 -->
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>角度 (傾き)</span>
+              <span id="valRotate">0°</span>
+            </div>
+            <input type="range" id="rangeRotate" min="-30" max="30" value="0" class="w-full">
+          </div>
+
+          <!-- 幅（横幅のフィット感） -->
+          <div>
+            <div class="flex justify-between text-slate-400 mb-1">
+              <span>横幅比率</span>
+              <span id="valWidthRatio">100%</span>
+            </div>
+            <input type="range" id="rangeWidthRatio" min="80" max="130" value="100" class="w-full">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
