@@ -107,6 +107,7 @@ const state = {
   originalImage: null,
   currentResultImage: null,
   isProcessing: false,
+  apiKey: localStorage.getItem('google_ai_studio_api_key') || '',
   // 調整スライダー
   scale: 1.0,
   offsetX: 0,
@@ -348,6 +349,47 @@ function setupEventListeners() {
 
   // 合成ボタン
   btnGenerateAI.onclick = executeHairChange;
+
+  // Google AI Studio モーダル
+  const apiKeyModal = document.getElementById('apiKeyModal');
+  const btnOpenApiKeyModal = document.getElementById('btnOpenApiKeyModal');
+  const btnCloseModal = document.getElementById('btnCloseModal');
+  const btnSaveApiKey = document.getElementById('btnSaveApiKey');
+  const btnClearApiKey = document.getElementById('btnClearApiKey');
+  const inputApiKey = document.getElementById('inputApiKey');
+  const engineBadge = document.getElementById('engineBadge');
+
+  if (state.apiKey) {
+    inputApiKey.value = state.apiKey;
+    engineBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Google Imagen 3 (稼働中)';
+    engineBadge.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+  }
+
+  btnOpenApiKeyModal.onclick = () => {
+    apiKeyModal.classList.remove('hidden');
+    inputApiKey.value = state.apiKey;
+  };
+  btnCloseModal.onclick = () => apiKeyModal.classList.add('hidden');
+  btnSaveApiKey.onclick = () => {
+    state.apiKey = inputApiKey.value.trim();
+    localStorage.setItem('google_ai_studio_api_key', state.apiKey);
+    apiKeyModal.classList.add('hidden');
+    if (state.apiKey) {
+      engineBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Google Imagen 3 (稼働中)';
+      engineBadge.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    } else {
+      engineBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> リアルヘアエンジン稼働中';
+      engineBadge.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+    }
+    executeHairChange();
+  };
+  btnClearApiKey.onclick = () => {
+    state.apiKey = '';
+    localStorage.removeItem('google_ai_studio_api_key');
+    inputApiKey.value = '';
+    engineBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span> リアルヘアエンジン稼働中';
+    engineBadge.className = 'hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+  };
 }
 
 // 画像の読み込みセットアップ
@@ -415,10 +457,11 @@ async function executeHairChange() {
       body: JSON.stringify({
         image: originalData,
         style_id: state.currentStyleId,
+        color_id: state.currentColorId,
         scale: state.scale,
         offset_x: state.offsetX,
         offset_y: state.offsetY,
-        color: currentColor ? currentColor.hex : '#1c1b1b'
+        api_key: state.apiKey
       })
     });
 

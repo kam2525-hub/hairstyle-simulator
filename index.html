@@ -42,10 +42,13 @@
           <p class="text-xs text-slate-400">センターパート / ウルフ / コンマバングなど人気トレンドを完全再現</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          AIエンジン稼働中
+      <div class="flex items-center gap-2">
+        <button id="btnOpenApiKeyModal" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-key text-amber-400"></i> Google AI設定 (無料)
+        </button>
+        <div id="engineBadge" class="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          リアルヘアエンジン稼働中
         </div>
       </div>
     </div>
@@ -215,6 +218,48 @@
     </div>
 
   </main>
+
+  <!-- Google AI Studio 設定モーダル -->
+  <div id="apiKeyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button id="btnCloseModal" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-white">Google AI Studio (完全無料)</h3>
+          <p class="text-xs text-slate-400">Googleの最先端画像AI (Imagen 3) で生成</p>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+        Googleアカウントをお持ちなら、<a href="https://aistudio.google.com/apikey" target="_blank" class="text-indigo-400 underline font-semibold">Google AI Studio</a> で無料のAPIキーを1分で取得できます（クレジットカード不要）。
+      </p>
+
+      <div class="space-y-3 mb-5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">API Key (または未入力でプリセットを使用)</label>
+          <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+        <p class="text-[11px] text-slate-400">
+          ※ キーはご自身のブラウザのローカルストレージにのみ保存され、外部には送信されません。
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button id="btnClearApiKey" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300">
+          クリア
+        </button>
+        <button id="btnSaveApiKey" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-lg shadow-indigo-600/30">
+          保存して適用
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
