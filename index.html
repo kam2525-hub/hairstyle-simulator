@@ -6,17 +6,6 @@
   <title>AI HairStudio - チャット指示で髪型を変えるバーチャルサロン</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .checkerboard {
-      background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
-                        linear-gradient(-45deg, #1e293b 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, #1e293b 75%),
-                        linear-gradient(-45deg, transparent 75%, #1e293b 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-      background-color: #0b0f19;
-    }
-  </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
 
@@ -25,7 +14,7 @@
     <div class="max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <i class="fa-solid fa-comments text-white text-lg"></i>
+          <i class="fa-solid fa-scissors text-white text-lg"></i>
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -33,7 +22,7 @@
               AI HairStudio
             </h1>
             <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              チャット指示対応
+              チャットAIサロン
             </span>
           </div>
           <p class="text-xs text-slate-400">チャットで「センターパートにして」と頼むだけで髪型を生成</p>
@@ -50,17 +39,15 @@
   <!-- メインコンテンツ -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <!-- 左側: キャンバスプレビュー (7カラム) -->
+    <!-- 左側: メインプレビュー (7カラム) -->
     <div class="lg:col-span-7 flex flex-col gap-4">
       <div class="relative bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col items-center justify-center min-h-[500px] p-4">
         
-        <!-- キャンバス表示エリア -->
-        <div id="canvas-wrapper" class="relative max-w-full max-h-[520px] rounded-xl overflow-hidden shadow-2xl checkerboard flex items-center justify-center">
-          
-          <!-- メインキャンバス -->
-          <canvas id="mainCanvas" class="block max-w-full h-auto cursor-grab active:cursor-grabbing"></canvas>
+        <!-- 画像表示エリア -->
+        <div class="relative w-full max-w-[500px] rounded-xl overflow-hidden shadow-2xl bg-slate-950 flex flex-col items-center justify-center aspect-[3/4]">
+          <img id="mainResultImg" src="assets/catalog/m_center.jpg" alt="Hair Preview" class="w-full h-full object-cover">
 
-          <!-- ローディングオーバーレイ -->
+          <!-- ローディング -->
           <div id="loadingOverlay" class="absolute inset-0 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center hidden z-30">
             <div class="relative w-16 h-16 mb-4">
               <div class="absolute inset-0 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
@@ -68,49 +55,21 @@
                 <i class="fa-solid fa-wand-magic-sparkles text-lg text-indigo-400 animate-pulse"></i>
               </div>
             </div>
-            <h3 class="text-sm font-bold text-white mb-1" id="loadingTitle">AIがオーダー通りに髪型を生成中...</h3>
-            <p class="text-xs text-slate-400" id="loadingSubtitle">顔の目・鼻・口を保護し、髪の毛だけを描き直しています</p>
-          </div>
-
-          <!-- 未アップロード時案内 -->
-          <div id="emptyGuide" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-900/95 backdrop-blur-sm z-20">
-            <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-3xl mb-4 shadow-lg shadow-indigo-500/10">
-              <i class="fa-solid fa-user"></i>
-            </div>
-            <h3 class="font-bold text-lg text-white mb-2">自分の顔写真をセット</h3>
-            <p class="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
-              正面から撮った顔写真を選ぶか、サンプルモデルですぐに試せます。
-            </p>
-            <div class="flex flex-wrap items-center justify-center gap-3">
-              <label class="cursor-pointer px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                自分の写真をアップロード
-                <input type="file" id="imageInput" accept="image/*" class="hidden">
-              </label>
-              <button id="btnSampleMale" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
-                👨 男性モデルで試す
-              </button>
-              <button id="btnSampleFemale" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
-                👩 女性モデルで試す
-              </button>
-            </div>
+            <h3 class="text-sm font-bold text-white mb-1" id="loadingTitle">AIが髪型を生成中...</h3>
+            <p class="text-xs text-slate-400">オーダー通りのヘアスタイルを描き出しています</p>
           </div>
         </div>
 
         <!-- ツールバー -->
-        <div class="w-full mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/80 pt-3">
+        <div class="w-full max-w-[500px] mt-4 flex items-center justify-between gap-3 border-t border-slate-800/80 pt-3">
           <div class="flex items-center gap-2">
-            <button id="btnToggleCompare" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 flex items-center gap-1.5 transition">
-              <i class="fa-solid fa-eye"></i> Before確認 (長押し)
-            </button>
+            <span id="currentStatusBadge" class="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-lg border border-indigo-500/20">
+              スタイル: センターパート
+            </span>
           </div>
           <div class="flex items-center gap-2">
-            <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition">
-              <i class="fa-solid fa-camera"></i> 写真変更
-              <input type="file" id="imageInputAlt" accept="image/*" class="hidden">
-            </label>
             <button id="btnDownload" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition">
-              <i class="fa-solid fa-download"></i> 保存
+              <i class="fa-solid fa-download"></i> 写真を保存
             </button>
           </div>
         </div>
@@ -121,43 +80,43 @@
     <div class="lg:col-span-5 flex flex-col gap-4">
 
       <!-- 💬 チャットで髪型オーダーBOX -->
-      <div class="bg-gradient-to-b from-indigo-950/50 to-slate-900 p-4 rounded-2xl border border-indigo-500/40 shadow-xl flex flex-col gap-3">
+      <div class="bg-gradient-to-b from-indigo-950/50 to-slate-900 p-5 rounded-2xl border border-indigo-500/40 shadow-xl flex flex-col gap-3">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i>
           <h2 class="text-sm font-black text-white">チャットでAIにオーダーする</h2>
         </div>
         <p class="text-xs text-slate-300 leading-relaxed">
-          美容室で頼むように、希望の髪型やカラーを日本語で自由に入力してください：
+          美容室で頼むように、希望の髪型やカラーを入力して送信してください：
         </p>
 
         <!-- 入力フォーム -->
         <div class="relative">
-          <textarea id="chatPromptInput" rows="3" placeholder="例: 前髪を分けた大人っぽいセンターパートにして、黒髪で清潔感を出して" class="w-full p-3 pr-12 rounded-xl bg-slate-950 border border-indigo-500/40 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none"></textarea>
-          <button id="btnSubmitChat" class="absolute bottom-2.5 right-2.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-indigo-600/30 transition">
-            <span>送信</span>
+          <textarea id="chatPromptInput" rows="3" placeholder="例: 襟足レイヤーの立体的なウルフカットにして" class="w-full p-3 pr-12 rounded-xl bg-slate-950 border border-indigo-500/40 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 resize-none"></textarea>
+          <button id="btnSubmitChat" class="absolute bottom-2.5 right-2.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition">
+            <span>オーダー</span>
             <i class="fa-solid fa-paper-plane text-[10px]"></i>
           </button>
         </div>
 
         <!-- よく使われるオーダー例（ワンタップ入力） -->
-        <div class="flex flex-wrap gap-1.5 pt-1">
-          <span class="text-[10px] text-slate-400 self-center mr-1">タップで入力:</span>
-          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="前髪をセンター分けにした大人っぽいセンターパート、黒髪">
+        <div class="flex flex-wrap gap-1.5 pt-2">
+          <span class="text-[10px] text-slate-400 self-center mr-1">ワンタップ:</span>
+          <button class="quick-prompt text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 font-medium transition" data-text="前髪をセンター分けにした大人っぽいセンターパート">
             センターパート
           </button>
-          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="韓国風のコンマバング、前髪を内側にカールさせたスタイル">
+          <button class="quick-prompt text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 font-medium transition" data-text="韓国アイドル風の内巻きコンマバング">
             コンマバング
           </button>
-          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="襟足レイヤーの立体的なウルフカット、ダークブラウン">
+          <button class="quick-prompt text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 font-medium transition" data-text="襟足レイヤーの立体的なウルフカット">
             ウルフカット
           </button>
-          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 transition" data-text="波打ちウェーブのスパイラルパーマ、ウェット質感">
+          <button class="quick-prompt text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-900/50 font-medium transition" data-text="波打ちウェーブのスパイラルパーマ">
             スパイラルパーマ
           </button>
-          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-900/50 transition" data-text="韓国風くびれレイヤーカット、透明感あるグレージュ">
+          <button class="quick-prompt text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-900/50 font-medium transition" data-text="韓国風くびれレイヤーカット">
             くびれレイヤー
           </button>
-          <button class="quick-prompt text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-900/50 transition" data-text="顎ラインの綺麗な切りっぱなしボブ、ストレート">
+          <button class="quick-prompt text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-pink-300 border border-pink-900/50 font-medium transition" data-text="顎ラインの綺麗な切りっぱなしボブ">
             切りっぱなしボブ
           </button>
         </div>
